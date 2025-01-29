@@ -1,5 +1,6 @@
 const express = require("express")
 const mongoose = require("mongoose")
+const methodOverride = require('method-override');
 const fileUpload = require('express-fileupload');
 const fs=require("fs")
 const Image = require("./model/Image")
@@ -16,7 +17,7 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.json())
 
 app.use(fileUpload());
-
+app.use(methodOverride('_method'));
 
 app.get('/', async (req,res)=>{
     const images = await Image.find()
@@ -29,8 +30,13 @@ app.get('/', async (req,res)=>{
 app.get('/add',async (req,res)=>{
     res.status(200).render("add")
 })
-app.get('/edit', async (req,res)=>{
-    res.status(200).render("edit")
+app.get('/edit/:id', async (req,res)=>{
+
+    const image = await Image.findOne({_id:req.params.id})
+
+    res.status(200).render("edit",{
+        image
+    })
 })
 
 app.post('/images', async(req,res)=>{
@@ -53,6 +59,16 @@ app.post('/images', async(req,res)=>{
 
     res.redirect("/")
 })
+app.put("/images/:id", async(req,res)=>{
+    const image = await Image.findOne({_id:req.params.id});
+    
+    image.title = req.body.title
+    image.description = req.body.description
+    image.save()
+
+    res.status(200).redirect(`/`)
+})
+
 
 const port = 3000
 
